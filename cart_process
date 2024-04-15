@@ -1,0 +1,33 @@
+<?php
+// Kết nối đến cơ sở dữ liệu
+$conn = mysqli_connect('localhost', 'root', '', 'ecommerce');
+
+// Kiểm tra kết nối
+if (!$conn) {
+    die("Kết nối thất bại: " . mysqli_connect_error());
+}
+
+// Lấy thông tin sản phẩm từ yêu cầu POST
+$product_id = $_POST['ProductId'];
+$quantity = $_POST['Quantity'];
+$user_id = $_SESSION['UserId']; // Giả sử bạn đã xác thực người dùng và lưu ID vào phiên
+
+// Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng của người dùng hay chưa
+$sql = "SELECT * FROM cart_items WHERE ProductID = $product_id AND UserID = $user_id";
+$result = mysqli_query($conn, $sql);
+
+if (mysqli_num_rows($result) > 0) {
+    // Sản phẩm đã tồn tại trong giỏ hàng, cập nhật số lượng
+    $row = mysqli_fetch_assoc($result);
+    $new_quantity = $row['quantity'] + $quantity;
+    $update_sql = "UPDATE cart_items SET quantity = $new_quantity WHERE id = " . $row['id'];
+    mysqli_query($conn, $update_sql);
+} else {
+    // Sản phẩm chưa tồn tại trong giỏ hàng, thêm mới
+    $insert_sql = "INSERT INTO cart_items (product_id, quantity, user_id) VALUES ($product_id, $quantity, $user_id)";
+    mysqli_query($conn, $insert_sql);
+}
+
+// Đóng kết nối
+mysqli_close($conn);
+?>
